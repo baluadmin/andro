@@ -2,7 +2,7 @@
 import os
 import random
 import pypdf
-import google.generativeai as genai
+from google import genai
 import streamlit as st
 import chromadb
 
@@ -18,11 +18,11 @@ db_path = "./chroma_docs_db"
 if not os.path.exists(DOCS_FOLDER):
     os.makedirs(DOCS_FOLDER)
 
-# 2. Gemini & ChromaDB Setup (Using Streamlit Secrets for Secure AI Studio Key)
+# 2. Gemini & ChromaDB Setup (Using Streamlit Secrets)
 try:
-    # Streamlit Cloud Secrets-லிருந்து AI Studio கீயைப் பெறுதல் (உதாரணம்: GEMINI_API_KEY = "AIzaSy...")
+    # Streamlit Cloud-ன் Secrets பகுதியிலிருந்து AI Studio கீயைப் பாதுகாப்பாகப் பெறுதல்
     api_key = st.secrets["GEMINI_API_KEY"]
-    genai.configure(api_key=api_key)
+    client = genai.Client(api_key=api_key)
     
     chroma_client = chromadb.PersistentClient(path=db_path)
     collection = chroma_client.get_or_create_collection(name="subject_books_library")
@@ -110,9 +110,10 @@ def generate_new_question():
         {sample_text}
         """
         
-        # நிலையான மற்றும் வேலை செய்யும் மாடல் பெயர்
-        model = genai.GenerativeModel("gemini-2.5-flash")
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt
+        )
         
         st.session_state.ai_question = response.text
         st.session_state.context_used = sample_text
@@ -154,8 +155,10 @@ if st.session_state.ai_question:
                 - If incorrect, start with "❌ **தவறு! (தவறான பதில்)**", state what the correct option/answer is, and provide a short explanation in Tamil.
                 """
                 
-                model = genai.GenerativeModel("gemini-2.5-flash")
-                eval_response = model.generate_content(eval_prompt)
+                eval_response = client.models.generate_content(
+                    model="gemini-2.5-flash",
+                    contents=eval_prompt
+                )
                 
                 st.session_state.evaluation_result = eval_response.text
             except Exception as e:
