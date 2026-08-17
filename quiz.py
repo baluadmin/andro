@@ -21,7 +21,7 @@ if not os.path.exists(DOCS_FOLDER):
 # 2. Gemini & ChromaDB Setup (Using Streamlit Secrets)
 try:
     # Streamlit Cloud Settings-ல் உள்ள Secrets-லிருந்து AI Studio கீயைப் பாதுகாப்பாகப் பெறுதல்
-    api_key = st.secrets["GEMINI_API_KEY"]
+    api_key = st.secrets["AQ.Ab8RN6Jc2067GmNfKToB9XuTi3RA7Nok1yiCUgS-8zJJzKavBw"]
     client = genai.Client(api_key=api_key)
     
     chroma_client = chromadb.PersistentClient(path=db_path)
