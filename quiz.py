@@ -18,19 +18,23 @@ db_path = "./chroma_docs_db"
 if not os.path.exists(DOCS_FOLDER):
     os.makedirs(DOCS_FOLDER)
 
-# 2. Gemini & ChromaDB Setup
+# 2. Gemini & ChromaDB Setup (Using Streamlit Secrets)
 try:
-    client = genai.Client(api_key="AQ.Ab8RN6Ih91wJUTlrJucAVxtyUZ5eGmHf9OzEQ1LeXE1zMX5JlQ")
+    # Streamlit Cloud-ன் Secrets பகுதியிலிருந்து API Key-ஐ பாதுகாப்பாகப் பெறுதல்
+    api_key = st.secrets["AQ.Ab8RN6Ih91wJUTlrJucAVxtyUZ5eGmHf9OzEQ1LeXE1zMX5JlQ"]
+    client = genai.Client(api_key=api_key)
+    
     chroma_client = chromadb.PersistentClient(path=db_path)
     collection = chroma_client.get_or_create_collection(name="subject_books_library")
 except Exception as e:
-    st.error(f"Configuration Error: {e}")
+    st.error(f"Configuration Error / API Key Missing: தயவுசெய்து Streamlit Secrets-ல் GEMINI_API_KEY-ஐ அமைக்கவும். பிழை: {e}")
     st.stop()
 
 # Auto-load all files from folder into ChromaDB
 def load_all_files():
     if not os.path.exists(DOCS_FOLDER):
         return []
+    
     files = [f for f in os.listdir(DOCS_FOLDER) if f.endswith((".pdf", ".txt"))]
     for file in files:
         file_path = os.path.join(DOCS_FOLDER, file)
@@ -45,6 +49,7 @@ def load_all_files():
                 elif file.endswith(".txt"):
                     with open(file_path, "r", encoding="utf-8") as f:
                         text_content = f.read()
+                
                 if text_content.strip():
                     collection.add(documents=[text_content], ids=[file])
         except Exception:
@@ -65,9 +70,9 @@ if "evaluation_result" not in st.session_state:
 if "detailed_explanation" not in st.session_state:
     st.session_state.detailed_explanation = ""
 
-# 3. Dynamic File Selection (Fallback if folder is empty)
+# 3. Dynamic File Selection
 if not available_files:
-    st.warning(f"⚠️ `{DOCS_FOLDER}` கோப்புறை காலியாக உள்ளது! கிதுப்பில் (GitHub) உங்கள் கோப்புகளைச் சரியாக அப்லோடு செய்துள்ளீர்களா எனச் சரிபார்க்கவும்.")
+    st.warning(f"⚠️ `{DOCS_FOLDER}` கோப்புறை காலியாக உள்ளது! GitHub ரிபாசிட்டரியில் `my_documents` என்ற ஃபோல்டரை உருவாக்கி அதற்குள் உங்கள் PDF அல்லது TXT கோப்புகளைச் சேர்த்துள்ளீர்களா என உறுதி செய்யவும்.")
     selected_file = "Sample"
 else:
     selected_file = st.selectbox(
@@ -106,7 +111,7 @@ def generate_new_question():
         """
         
         response = client.models.generate_content(
-            model="gemini-3.5-flash-lite",
+            model="gemini-2.5-flash",
             contents=prompt
         )
         
@@ -116,9 +121,9 @@ def generate_new_question():
         st.session_state.evaluation_result = ""
         st.session_state.detailed_explanation = ""
     except Exception as e:
-        st.error(f"Error: {e}")
+        st.error(f"Error generating question: {e}")
 
-# Start Quiz Button (Always visible now)
+# Start Quiz Button (Always visible)
 st.markdown("---")
 if st.button("🚀 வினாடி வினாவைத் தொடங்குக / அடுத்த கேள்வி"):
     generate_new_question()
@@ -151,13 +156,13 @@ if st.session_state.ai_question:
                 """
                 
                 eval_response = client.models.generate_content(
-                    model="gemini-3.5-flash-lite",
+                    model="gemini-2.5-flash",
                     contents=eval_prompt
                 )
                 
                 st.session_state.evaluation_result = eval_response.text
             except Exception as e:
-                st.error(f"Error: {e}")
+                st.error(f"Error evaluating: {e}")
 
     # Display Evaluation Result
     if st.session_state.evaluation_result:
