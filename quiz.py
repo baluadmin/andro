@@ -18,16 +18,15 @@ db_path = "./chroma_docs_db"
 if not os.path.exists(DOCS_FOLDER):
     os.makedirs(DOCS_FOLDER)
 
-# 2. Gemini & ChromaDB Setup (Using Streamlit Secrets)
+# 2. Gemini & ChromaDB Setup (Direct API Key Integration)
 try:
-    # Streamlit Cloud-ன் Secrets பகுதியிலிருந்து API Key-ஐ பாதுகாப்பாகப் பெறுதல்
-    api_key = st.secrets["AQ.Ab8RN6Ih91wJUTlrJucAVxtyUZ5eGmHf9OzEQ1LeXE1zMX5JlQ"]
+    api_key = "AQ.Ab8RN6Ih91wJUTlrJucAVxtyUZ5eGmHf9OzEQ1LeXE1zMX5JlQ"
     client = genai.Client(api_key=api_key)
     
     chroma_client = chromadb.PersistentClient(path=db_path)
     collection = chroma_client.get_or_create_collection(name="subject_books_library")
 except Exception as e:
-    st.error(f"Configuration Error / API Key Missing: தயவுசெய்து Streamlit Secrets-ல் GEMINI_API_KEY-ஐ அமைக்கவும். பிழை: {e}")
+    st.error(f"Configuration Error / API Key Missing: {e}")
     st.stop()
 
 # Auto-load all files from folder into ChromaDB
@@ -156,7 +155,7 @@ if st.session_state.ai_question:
                 """
                 
                 eval_response = client.models.generate_content(
-                    model="gemini-2.5-flash",
+                    model="gemini-3.1-flash-lite",
                     contents=eval_prompt
                 )
                 
