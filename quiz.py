@@ -20,7 +20,7 @@ if not os.path.exists(DOCS_FOLDER):
 
 # 2. Gemini & ChromaDB Setup
 try:
-    client = genai.Client(api_key="AQ.Ab8RN6Lq1AOV_J932ovPXEpNx6lsD95e91rF5UDC0GAtDNAfeQ")
+    client = genai.Client(api_key="AQ.Ab8RN6Ih91wJUTlrJucAVxtyUZ5eGmHf9OzEQ1LeXE1zMX5JlQ")
     chroma_client = chromadb.PersistentClient(path=db_path)
     collection = chroma_client.get_or_create_collection(name="subject_books_library")
 except Exception as e:
