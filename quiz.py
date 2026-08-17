@@ -2,7 +2,7 @@
 import os
 import random
 import pypdf
-from google import genai
+import google.generativeai as genai
 import streamlit as st
 import chromadb
 
@@ -18,16 +18,15 @@ db_path = "./chroma_docs_db"
 if not os.path.exists(DOCS_FOLDER):
     os.makedirs(DOCS_FOLDER)
 
-# 2. Gemini & ChromaDB Setup (Using Streamlit Secrets)
+# 2. Gemini & ChromaDB Setup (Using google.generativeai for AQ token)
 try:
-    # Streamlit Cloud Settings-ல் உள்ள Secrets-லிருந்து AI Studio கீயைப் பாதுகாப்பாகப் பெறுதல்
-    api_key = st.secrets["AQ.Ab8RN6Jc2067GmNfKToB9XuTi3RA7Nok1yiCUgS-8zJJzKavBw"]
-    client = genai.Client(api_key=api_key)
+    api_key = "AQ.Ab8RN6Jc2067GmNfKToB9XuTi3RA7Nok1yiCUgS-8zJJzKavBw"
+    genai.configure(api_key=api_key)
     
     chroma_client = chromadb.PersistentClient(path=db_path)
     collection = chroma_client.get_or_create_collection(name="subject_books_library")
 except Exception as e:
-    st.error(f"Configuration Error / Secrets Missing: தயவுசெய்து Streamlit Cloud Settings-ல் GEMINI_API_KEY-ஐ (AIzaSy...) சரியாக அமைக்கவும். பிழை: {e}")
+    st.error(f"Configuration Error: {e}")
     st.stop()
 
 # Auto-load all files from folder into ChromaDB
@@ -110,10 +109,8 @@ def generate_new_question():
         {sample_text}
         """
         
-        response = client.models.generate_content(
-            model="gemini-1.5-flash",
-            contents=prompt
-        )
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        response = model.generate_content(prompt)
         
         st.session_state.ai_question = response.text
         st.session_state.context_used = sample_text
@@ -155,10 +152,8 @@ if st.session_state.ai_question:
                 - If incorrect, start with "❌ **தவறு! (தவறான பதில்)**", state what the correct option/answer is, and provide a short explanation in Tamil.
                 """
                 
-                eval_response = client.models.generate_content(
-                    model="gemini-1.5-flash",
-                    contents=eval_prompt
-                )
+                model = genai.GenerativeModel("gemini-1.5-flash")
+                eval_response = model.generate_content(eval_prompt)
                 
                 st.session_state.evaluation_result = eval_response.text
             except Exception as e:
