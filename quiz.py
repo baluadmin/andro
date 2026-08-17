@@ -18,10 +18,9 @@ db_path = "./chroma_docs_db"
 if not os.path.exists(DOCS_FOLDER):
     os.makedirs(DOCS_FOLDER)
 
-# 2. Gemini & ChromaDB Setup (Direct AI Studio API Key)
+# 2. Gemini & ChromaDB Setup
 try:
-    # இங்கு உங்கள் உண்மையான Google AI Studio API Key-ஐ (AIzaSy... எனத் தொடங்குவது) இடவும்
-    api_key = "AIzaSy..." 
+    api_key = "AQ.Ab8RN6Jc2067GmNfKToB9XuTi3RA7Nok1yiCUgS-8zJJzKavBw"
     client = genai.Client(api_key=api_key)
     
     chroma_client = chromadb.PersistentClient(path=db_path)
