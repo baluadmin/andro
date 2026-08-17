@@ -18,15 +18,16 @@ db_path = "./chroma_docs_db"
 if not os.path.exists(DOCS_FOLDER):
     os.makedirs(DOCS_FOLDER)
 
-# 2. Gemini & ChromaDB Setup (Using google.generativeai)
+# 2. Gemini & ChromaDB Setup (Using Streamlit Secrets for Secure AI Studio Key)
 try:
-    api_key = "AQ.Ab8RN6Ih91wJUTlrJucAVxtyUZ5eGmHf9OzEQ1LeXE1zMX5JlQ"
+    # Streamlit Cloud Secrets-லிருந்து AI Studio கீயைப் பெறுதல் (உதாரணம்: GEMINI_API_KEY = "AIzaSy...")
+    api_key = st.secrets["GEMINI_API_KEY"]
     genai.configure(api_key=api_key)
     
     chroma_client = chromadb.PersistentClient(path=db_path)
     collection = chroma_client.get_or_create_collection(name="subject_books_library")
 except Exception as e:
-    st.error(f"Configuration Error / API Key Missing: {e}")
+    st.error(f"Configuration Error / Secrets Missing: தயவுசெய்து Streamlit Cloud Settings-ல் GEMINI_API_KEY-ஐ சரியாக அமைக்கவும். பிழை: {e}")
     st.stop()
 
 # Auto-load all files from folder into ChromaDB
@@ -109,7 +110,8 @@ def generate_new_question():
         {sample_text}
         """
         
-        model = genai.GenerativeModel("gemini-3.1-flash-lite")
+        # நிலையான மற்றும் வேலை செய்யும் மாடல் பெயர்
+        model = genai.GenerativeModel("gemini-2.5-flash")
         response = model.generate_content(prompt)
         
         st.session_state.ai_question = response.text
@@ -152,7 +154,7 @@ if st.session_state.ai_question:
                 - If incorrect, start with "❌ **தவறு! (தவறான பதில்)**", state what the correct option/answer is, and provide a short explanation in Tamil.
                 """
                 
-                model = genai.GenerativeModel("gemini-3.1-flash-lite")
+                model = genai.GenerativeModel("gemini-2.5-flash")
                 eval_response = model.generate_content(eval_prompt)
                 
                 st.session_state.evaluation_result = eval_response.text
