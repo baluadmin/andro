@@ -6,10 +6,10 @@ from google import genai
 import streamlit as st
 import chromadb
 
-st.set_page_config(page_title="NEET Pattern AI Quiz Master", layout="centered")
+st.set_page_config(page_title="AI Document Quiz Master", layout="centered")
 
-st.title("🎯 NEET Pattern AI Quiz Master (தமிழ்)")
-st.write("உங்கள் ஆவணங்களிலிருந்து வரம்பற்ற NEET-வடிவ வினாக்களை (MCQs, Statements, Assertion-Reasoning) தமிழில் பயிற்சி செய்யுங்கள்!")
+st.title("🎯 AI Document Quiz Master (தமிழ்)")
+st.write("உங்கள் ஆவணங்களிலிருந்து எப்பேர்ப்பட்ட பொதுவான வினாக்களையும் (MCQs) தமிழில் உருவாக்கிக் பயிற்சி செய்யுங்கள்!")
 
 # 1. Folder & Database Setup
 DOCS_FOLDER = "./my_documents"
@@ -71,9 +71,9 @@ if "show_explanation_prompt" not in st.session_state:
 if "detailed_explanation" not in st.session_state:
     st.session_state.detailed_explanation = ""
 
-# 3. Dynamic File/Subject Selection
+# 3. Dynamic File Selection
 if not available_files:
-    st.warning(f"⚠️ `{DOCS_FOLDER}` கோப்புறைக்குள் எந்த PDF அல்லது TXT கோப்புகளும் கிடைக்கவில்லை! தயவுசெய்து உங்கள் படிப்பு ஆவணங்களை அங்கு சேர்க்கவும்.")
+    st.warning(f"⚠️ `{DOCS_FOLDER}` கோப்புறை காலியாக உள்ளது அல்லது கோப்புகள் இல்லை. தயவுசெய்து உங்கள் கிதுப் (GitHub) ரிபாசிட்டரியில் `my_documents` என்ற பெயரில் ஃபோல்டர் உருவாக்கி, அதற்குள் உங்கள் PDF அல்லது TXT கோப்புகளைப் பதிவேற்றவும்.")
     st.stop()
 
 selected_file = st.selectbox(
@@ -81,7 +81,7 @@ selected_file = st.selectbox(
     available_files
 )
 
-# Function to generate NEET pattern question in Tamil
+# Function to generate General question in Tamil
 def generate_new_question():
     try:
         file_data = collection.get(ids=[selected_file])
@@ -95,7 +95,7 @@ def generate_new_question():
         sample_text = full_text[start_idx:start_idx + 4000]
         
         prompt = f"""
-        You are an expert NEET question paper setter. Read the following text extracted strictly from '{selected_file}' and create ONE high-quality multiple-choice question in TAMIL language following the exact NEET exam patterns (such as Direct MCQs, Statement I & II type, or Assertion-Reasoning type).
+        You are an expert quiz creator. Read the following text extracted strictly from '{selected_file}' and create ONE high-quality multiple-choice question (MCQ) in TAMIL language.
         
         CRITICAL INSTRUCTIONS:
         1. The question, options, and explanation MUST be completely in TAMIL (தமிழ்). Avoid using any LaTeX symbols or dollar signs ($).
@@ -103,7 +103,7 @@ def generate_new_question():
         3. Put each option (a, b, c, d) on a completely new line. 
         4. Use this exact output structure:
         
-        Question: [Type the NEET pattern question here in Tamil]
+        Question: [Type the question here in Tamil]
         
         a. [Option A text in Tamil]
         b. [Option B text in Tamil]
@@ -130,18 +130,15 @@ def generate_new_question():
         st.error(f"Error: {e}")
 
 # Start Quiz Button
-if not st.session_state.quiz_active:
-    if st.button("🚀 NEET வினாடி வினாவைத் தொடங்குக"):
-        st.session_state.question_count = 0
-        generate_new_question()
-        st.rerun()
+if st.button("🚀 வினாடி வினாவைத் தொடங்குக / அடுத்த கேள்வி"):
+    generate_new_question()
+    st.rerun()
 
 # 4. Display Question and Options
 if st.session_state.quiz_active and st.session_state.ai_question:
     st.markdown("---")
     st.markdown(f"### 📊 வினா எண்: {st.session_state.question_count} (ஆவணம்: {selected_file})")
     
-    # Using st.markdown instead of st.text for clean Tamil text formatting
     st.markdown(st.session_state.ai_question)
     
     user_choice = st.radio(
@@ -163,7 +160,7 @@ if st.session_state.quiz_active and st.session_state.ai_question:
                 Task (Completely in TAMIL / தமிழ்):
                 - Check if the user's selected option is correct based on the reference context and options.
                 - If correct, start with "✅ **நன்று! (சரியான பதில்)**" and appreciate the user in Tamil.
-                - If incorrect, start with "❌ **தவறு! (தவறான பதில்)**", state what the correct option/answer is, and provide a short explanation in Tamil based on NEET standards. Ensure smooth formatting without broken compound words.
+                - If incorrect, start with "❌ **தவறு! (தவறான பதில்)**", state what the correct option/answer is, and provide a short explanation in Tamil. Ensure smooth formatting without broken compound words.
                 """
                 
                 eval_response = client.models.generate_content(
@@ -182,7 +179,6 @@ if st.session_state.quiz_active and st.session_state.ai_question:
         st.subheader("📢 AI மதிப்பீடு:")
         st.markdown(st.session_state.evaluation_result)
         
-        # Ask for Detailed Explanation (Yes / No)
         if st.session_state.show_explanation_prompt and not st.session_state.detailed_explanation:
             st.markdown("---")
             st.write("💡 **இந்தக் கேள்விக்கு மேலும் விரிவான விளக்கம் தேவையா?**")
@@ -192,7 +188,7 @@ if st.session_state.quiz_active and st.session_state.ai_question:
                 if st.button("ஆம் (விளக்கத்தைப் பெறுக)"):
                     with st.spinner("AI விரிவான விளக்கத்தை உருவாக்குகின்றது..."):
                         detail_prompt = f"""
-                        Provide a deep, step-by-step detailed NEET-level explanation and concept background for this question completely in TAMIL (தமிழ்):
+                        Provide a deep, step-by-step detailed explanation and concept background for this question completely in TAMIL (தமிழ்):
                         Question & Options: {st.session_state.ai_question}
                         Context: {st.session_state.context_used}
                         """
@@ -203,16 +199,11 @@ if st.session_state.quiz_active and st.session_state.ai_question:
                         st.session_state.detailed_explanation = detail_response.text
                         st.rerun()
             with col2:
-                if st.button("இல்லை (அடுத்த கேள்வி)"):
+                if st.button("இல்லை (அடுத்த கேள்விக்குச் செல்)"):
                     generate_new_question()
                     st.rerun()
 
-        # Display Detailed Explanation and Next Question Button
         if st.session_state.detailed_explanation:
             st.markdown("---")
             st.subheader("📖 விரிவான விளக்கம்:")
             st.markdown(st.session_state.detailed_explanation)
-            
-            if st.button("👉 அடுத்த கேள்விக்கு இங்கே கிளிக் செய்யவும்"):
-                generate_new_question()
-                st.rerun()
