@@ -7,17 +7,17 @@ import chromadb
 
 st.set_page_config(page_title="AI Document Quiz Master", layout="centered")
 
-# --- HIDE ALL STREAMLIT BRANDING, HEADER, FOOTER & VIEWER BADGES ---
+# --- HIDE ALL STREAMLIT BRANDING, TOOLBARS & BADGES ---
 hide_streamlit_style = """
 <style>
 #MainMenu {visibility: hidden;}
 header {visibility: hidden;}
 footer {visibility: hidden;}
-.stAppToolbar {visibility: hidden;}
-.stAppDeployButton {display: none;}
-div[data-testid="stStatusWidget"] {visibility: hidden;}
-.viewerBadge_container__1QSob {display: none;}
-.styles_viewerBadge__1yB5_ {display: none;}
+div[data-testid="stToolbar"] {display: none !important;}
+div[data-testid="stDecoration"] {display: none !important;}
+div[data-testid="stStatusWidget"] {visibility: hidden !important;}
+.stAppDeployButton {display: none !important;}
+footer {visibility: hidden !important;}
 </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
