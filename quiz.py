@@ -18,11 +18,11 @@ db_path = "./chroma_docs_db"
 if not os.path.exists(DOCS_FOLDER):
     os.makedirs(DOCS_FOLDER)
 
-# 2. Gemini & ChromaDB Setup (AQ Model Authentication Fix)
+# 2. Gemini & ChromaDB Setup (AQ Mode Configuration)
 try:
     aq_token = "AQ.Ab8RN6Jc2067GmNfKToB9XuTi3RA7Nok1yiCUgS-8zJJzKavBw"
     
-    # Google Cloud / AQ model-க்காக Environment Variable-ல் டோக்கனை సెట్ செய்தல்
+    # AQ டோக்கனை Environment Variable வழியாக ஜெமினிக்கு வழங்குதல்
     os.environ["GEMINI_API_KEY"] = aq_token
     genai.configure(api_key=aq_token)
     
@@ -165,5 +165,5 @@ if st.session_state.ai_question:
     # Display Evaluation Result
     if st.session_state.evaluation_result:
         st.markdown("---")
-        st.subheader("📢 மதிப்பீடு:")
+        st.subheader("📢 AI மதிப்பீடு:")
         st.markdown(st.session_state.evaluation_result)
