@@ -19,7 +19,8 @@ div[data-testid="stStatusWidget"] {display: none !important;}
 .stAppDeployButton {display: none !important;}
 .viewerBadge_container__1QSob {display: none !important;}
 .styles_viewerBadge__1yB5_ {display: none !important;}
-a[href*="streamlit.cloud"] {display: none !important;}
+iframe {display: block;}
+body > div:last-child {display: none !important;}
 </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
