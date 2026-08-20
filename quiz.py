@@ -54,7 +54,7 @@ try:
         )
         st.stop()
 
-    api_key = st.secrets["AQ.Ab8RN6Jc2067GmNfKToB9XuTi3RA7Nok1yiCUgS-8zJJzKavBw"]
+    api_key = st.secrets["GEMINI_API_KEY"]
 
     if not api_key:
         st.error("❌ GEMINI_API_KEY காலியாக உள்ளது.")
