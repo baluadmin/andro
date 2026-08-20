@@ -113,7 +113,7 @@ def generate_next_question():
         You are an expert Tamil quiz creator. Read the following progressive text block from the document and create ONE high-quality multiple-choice question (MCQ) strictly in pure, grammatically correct TAMIL (தமிழ்) language with zero spelling mistakes.
         
         CRITICAL INSTRUCTIONS:
-        1. Ensure correct spelling and clear formatting in Tamil words (e.g., பொருளாதாரம், செலவினங்கள்). Do not make typo errors.
+        1. Ensure correct spelling and clear formatting in Tamil words (பொருளாதாரம், செலவினங்கள் போன்றவை). Do not make typo errors.
         2. Put each option (a, b, c, d) on a completely new line. 
         3. Use this exact output structure:
         
@@ -169,9 +169,9 @@ if st.session_state.ai_question:
                 User selected option: '{user_choice}'
                 
                 Task (Completely in correct TAMIL / தமிழ் with no spelling errors):
-                - Check if the user's selected option is correct based on the reference context and options.
-                - If correct, start with "✅ **நன்று! (சரியான பதில்)**" and appreciate the user in Tamil.
-                - If incorrect, start with "❌ **தவறு! (தவறான பதில்)**", state what the correct option/answer is, and provide a short explanation in Tamil.
+                - Check if the user's selected option is correct based on the reference context.
+                - If correct, start with "✅ **நன்று! (சரியான பதில்)**" and provide a detailed explanation showing **how and why it is correct** based on the document text.
+                - If incorrect, start with "❌ **தவறு! (தவறான பதில்)**", clearly state **what the correct option/answer is**, and provide a detailed explanation explaining **why the correct answer is right and how it is derived from the source text**.
                 """
                 
                 eval_completion = client.chat.completions.create(
@@ -187,10 +187,10 @@ if st.session_state.ai_question:
     # Display Evaluation Result
     if st.session_state.evaluation_result:
         st.markdown("---")
-        st.subheader("📢 AI மதிப்பீடு:")
+        st.subheader("📢 AI மதிப்பீடு மற்றும் தெளிவான விளக்கம்:")
         st.markdown(st.session_state.evaluation_result)
         
-        # Next Question Button moved to the BOTTOM after evaluation
+        # Next Question Button at the bottom
         st.markdown("---")
         if st.button("⏭️ அடுத்த கேள்விக்குச் செல்க (Next Question)"):
             generate_next_question()
