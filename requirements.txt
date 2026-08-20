@@ -1,4 +1,4 @@
 streamlit
 pypdf
+groq
 chromadb
-google-genai
