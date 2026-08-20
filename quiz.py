@@ -109,7 +109,8 @@ def generate_new_question():
         {sample_text}
         """
         
-        model = genai.GenerativeModel("gemini-1.5-flash")
+        # Updated to standard model
+        model = genai.GenerativeModel("gemini-2.5-flash")
         response = model.generate_content(prompt)
         
         st.session_state.ai_question = response.text
@@ -152,7 +153,7 @@ if st.session_state.ai_question:
                 - If incorrect, start with "❌ **தவறு! (தவறான பதில்)**", state what the correct option/answer is, and provide a short explanation in Tamil.
                 """
                 
-                model = genai.GenerativeModel("gemini-1.5-flash")
+                model = genai.GenerativeModel("gemini-2.5-flash")
                 eval_response = model.generate_content(eval_prompt)
                 
                 st.session_state.evaluation_result = eval_response.text
