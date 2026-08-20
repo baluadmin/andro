@@ -3,6 +3,7 @@ import os
 import pypdf
 from groq import Groq
 import streamlit as st
+import streamlit.components.v1 as components
 import chromadb
 
 st.set_page_config(page_title="AI Document Quiz Master", layout="centered")
@@ -201,11 +202,26 @@ if st.session_state.ai_question:
             except Exception as e:
                 st.error(f"Error evaluating: {e}")
 
-    # Display Evaluation Result
+    # Display Evaluation Result & Auto-scroll down smoothly
     if st.session_state.evaluation_result:
         st.markdown("---")
         st.subheader("📢 AI மதிப்பீடு மற்றும் தெளிவான விளக்கம்:")
         st.markdown(st.session_state.evaluation_result)
+        
+        # Smooth auto-scroll component pointing to evaluation results
+        components.html(
+            """
+            <script>
+                const elements = window.parent.document.querySelectorAll('h3');
+                elements.forEach(el => {
+                    if (el.innerText.includes('மதிப்பீடு')) {
+                        el.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            </script>
+            """,
+            height=0
+        )
         
         # Next Question Button at the bottom
         st.markdown("---")
