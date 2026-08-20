@@ -20,8 +20,7 @@ if not os.path.exists(DOCS_FOLDER):
 
 # 2. Groq & ChromaDB Setup
 try:
-    groq_api_key = "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"  
-    # Replace with your free Groq key from console.groq.com
+    groq_api_key = "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"
     client = Groq(api_key=groq_api_key)
     
     chroma_client = chromadb.PersistentClient(path=db_path)
@@ -78,7 +77,7 @@ else:
         available_files
     )
 
-# Function to generate question in Tamil using Groq
+# Function to generate question in Tamil using Groq with spelling corrections
 def generate_new_question():
     try:
         sample_text = "பொதுவான அறிவு மற்றும் ஆவணத் தகவல்."
@@ -90,14 +89,14 @@ def generate_new_question():
                 sample_text = full_text[start_idx:start_idx + 4000]
         
         prompt = f"""
-        You are an expert quiz creator. Read the following text extracted strictly from the document and create ONE high-quality multiple-choice question (MCQ) in TAMIL language.
+        You are an expert Tamil quiz creator. Read the following text and create ONE high-quality multiple-choice question (MCQ) strictly in pure, grammatically correct TAMIL (தமிழ்) language with zero spelling mistakes.
         
         CRITICAL INSTRUCTIONS:
-        1. The question, options, and explanation MUST be completely in TAMIL (தமிழ்). Avoid using any LaTeX symbols or dollar signs ($).
+        1. Ensure correct spelling and clear formatting in Tamil words (e.g., பொருளாதாரம், செலவினங்கள்). Do not make typo errors.
         2. Put each option (a, b, c, d) on a completely new line. 
         3. Use this exact output structure:
         
-        Question: [Type the question here in Tamil]
+        Question: [Type the question here cleanly in Tamil]
         
         a. [Option A text in Tamil]
         b. [Option B text in Tamil]
@@ -109,9 +108,9 @@ def generate_new_question():
         """
         
         completion = client.chat.completions.create(
-            model="openai/gpt-oss-20b",  # Active Groq free-tier model identifier
+            model="openai/gpt-oss-20b",
             messages=[{"role": "user", "content": prompt}],
-            temperature=0.7
+            temperature=0.3
         )
         
         st.session_state.ai_question = completion.choices[0].message.content
@@ -147,16 +146,16 @@ if st.session_state.ai_question:
                 Reference context: {st.session_state.context_used}
                 User selected option: '{user_choice}'
                 
-                Task (Completely in TAMIL / தமிழ்):
+                Task (Completely in correct TAMIL / தமிழ் with no spelling errors):
                 - Check if the user's selected option is correct based on the reference context and options.
                 - If correct, start with "✅ **நன்று! (சரியான பதில்)**" and appreciate the user in Tamil.
                 - If incorrect, start with "❌ **தவறு! (தவறான பதில்)**", state what the correct option/answer is, and provide a short explanation in Tamil.
                 """
                 
                 eval_completion = client.chat.completions.create(
-                    model="openai/gpt-oss-20b",  # Active Groq free-tier model identifier
+                    model="openai/gpt-oss-20b",
                     messages=[{"role": "user", "content": eval_prompt}],
-                    temperature=0.5
+                    temperature=0.3
                 )
                 
                 st.session_state.evaluation_result = eval_completion.choices[0].message.content
