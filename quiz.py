@@ -98,18 +98,15 @@ def generate_next_question():
                 full_text = file_data["documents"][0]
                 total_len = len(full_text)
                 
-                # Check if we reached the end of the document
                 if st.session_state.text_pointer >= total_len:
                     st.success("🎉 வாழ்த்துகள்! இந்த ஆவணத்தின் (PDF) அனைத்துப் பகுதிகளிலிருந்தும் கேள்விகள் கேட்கப்பட்டுவிட்டன.")
-                    st.session_state.text_pointer = 0  # Loop back to start if desired
+                    st.session_state.text_pointer = 0
                 
                 chunk_size = 3500
                 start_idx = st.session_state.text_pointer
                 end_idx = min(start_idx + chunk_size, total_len)
                 
                 sample_text = full_text[start_idx:end_idx]
-                
-                # Move pointer forward for the next click
                 st.session_state.text_pointer = end_idx
         
         prompt = f"""
@@ -144,13 +141,13 @@ def generate_next_question():
     except Exception as e:
         st.error(f"Error generating question: {e}")
 
-# Start or Next Question Button
-st.markdown("---")
-button_label = "🚀 வினாடி வினாவைத் தொடங்குக" if st.session_state.question_count == 0 else "⏭️ அடுத்த கேள்விக்குச் செல்க (Next Question)"
-if st.button(button_label):
-    generate_next_question()
+# If no question has been generated yet, show initial start button
+if st.session_state.question_count == 0:
+    st.markdown("---")
+    if st.button("🚀 வினாடி வினாவைத் தொடங்குக"):
+        generate_next_question()
 
-# 4. Display Question and Options
+# 4. Display Question and Options if available
 if st.session_state.ai_question:
     st.markdown(f"### 📊 வினா எண்: {st.session_state.question_count}")
     st.markdown(st.session_state.ai_question)
@@ -192,3 +189,9 @@ if st.session_state.ai_question:
         st.markdown("---")
         st.subheader("📢 AI மதிப்பீடு:")
         st.markdown(st.session_state.evaluation_result)
+        
+        # Next Question Button moved to the BOTTOM after evaluation
+        st.markdown("---")
+        if st.button("⏭️ அடுத்த கேள்விக்குச் செல்க (Next Question)"):
+            generate_next_question()
+            st.rerun()
