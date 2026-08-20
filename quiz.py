@@ -18,10 +18,9 @@ db_path = "./chroma_docs_db"
 if not os.path.exists(DOCS_FOLDER):
     os.makedirs(DOCS_FOLDER)
 
-# 2. Groq & ChromaDB Setup (Free alternative to ChatGPT/Gemini)
+# 2. Groq & ChromaDB Setup
 try:
-    groq_api_key = "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" 
-    # Replace with your free Groq key from console.groq.com
+    groq_api_key = "gsk_YourGroqAPIKeyHere"  # Replace with your free Groq key from console.groq.com
     client = Groq(api_key=groq_api_key)
     
     chroma_client = chromadb.PersistentClient(path=db_path)
@@ -78,7 +77,7 @@ else:
         available_files
     )
 
-# Function to generate question in Tamil using Groq (Llama 3)
+# Function to generate question in Tamil using Groq
 def generate_new_question():
     try:
         sample_text = "பொதுவான அறிவு மற்றும் ஆவணத் தகவல்."
@@ -109,7 +108,7 @@ def generate_new_question():
         """
         
         completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="llama-3.1-8b-instant",  # Updated active model name
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7
         )
@@ -154,7 +153,7 @@ if st.session_state.ai_question:
                 """
                 
                 eval_completion = client.chat.completions.create(
-                    model="llama-3.3-70b-versatile",
+                    model="llama-3.1-8b-instant",  # Updated active model name
                     messages=[{"role": "user", "content": eval_prompt}],
                     temperature=0.5
                 )
