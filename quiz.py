@@ -15,9 +15,11 @@ header {visibility: hidden;}
 footer {visibility: hidden;}
 div[data-testid="stToolbar"] {display: none !important;}
 div[data-testid="stDecoration"] {display: none !important;}
-div[data-testid="stStatusWidget"] {visibility: hidden !important;}
+div[data-testid="stStatusWidget"] {display: none !important;}
 .stAppDeployButton {display: none !important;}
-footer {visibility: hidden !important;}
+.viewerBadge_container__1QSob {display: none !important;}
+.styles_viewerBadge__1yB5_ {display: none !important;}
+a[href*="streamlit.cloud"] {display: none !important;}
 </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
