@@ -1,169 +1,143 @@
-# -*- coding: utf-8 -*-
 import os
-import random
-import pypdf
-import google.generativeai as genai
 import streamlit as st
-import chromadb
+from langchain_community.document_loaders import PyPDFLoader
+from google import genai
 
-st.set_page_config(page_title="AI Document Quiz Master", layout="centered")
+# Page Configuration
+st.set_page_config(page_title="PDF Quiz App with Gemini", page_icon="📚", layout="centered")
 
-st.title("🎯 AI Document Quiz Master (தமிழ்)")
-st.write("உங்கள் ஆவணங்களிலிருந்து எப்பேர்ப்பட்ட பொதுவான வினாக்களையும் (MCQs) தமிழில் உருவாக்கிக் பயிற்சி செய்யுங்கள்!")
+st.title("📚 PDF Quiz Assistant (Powered by Gemini)")
+st.write("Select a PDF from your `my_documents` folder, test your knowledge, and get instant explanations!")
 
-# 1. Folder & Database Setup
-DOCS_FOLDER = "./my_documents"
-db_path = "./chroma_docs_db"
+# Initialize Gemini Client using your provided API key
+GEMINI_API_KEY = "AQ.Ab8RN6Jc2067GmNfKToB9XuTi3RA7Nok1yiCUgS-8zJJzKavBw"
+client = genai.Client(api_key=GEMINI_API_KEY)
 
-if not os.path.exists(DOCS_FOLDER):
-    os.makedirs(DOCS_FOLDER)
+# Function to load PDFs from the local 'my_documents' folder
+DOC_DIR = "my_documents"
 
-# 2. Gemini & ChromaDB Setup (AQ Mode Configuration)
-try:
-    aq_token = "AQ.Ab8RN6Jc2067GmNfKToB9XuTi3RA7Nok1yiCUgS-8zJJzKavBw"
-    
-    # AQ டோக்கனை Environment Variable வழியாக ஜெமினிக்கு வழங்குதல்
-    os.environ["GEMINI_API_KEY"] = aq_token
-    genai.configure(api_key=aq_token)
-    
-    chroma_client = chromadb.PersistentClient(path=db_path)
-    collection = chroma_client.get_or_create_collection(name="subject_books_library")
-except Exception as e:
-    st.error(f"Configuration Error: {e}")
+@st.cache_data
+def get_pdf_files():
+    if not os.path.exists(DOC_DIR):
+        os.makedirs(DOC_DIR)
+        return []
+    return [f for f in os.listdir(DOC_DIR) if f.endswith(".pdf")]
+
+pdf_files = get_pdf_files()
+
+if not pdf_files:
+    st.error(f"No PDF files found in the '{DOC_DIR}' folder! Please upload your PDF files inside that folder on GitHub.")
     st.stop()
 
-# Auto-load all files from folder into ChromaDB
-def load_all_files():
-    if not os.path.exists(DOCS_FOLDER):
-        return []
-    
-    files = [f for f in os.listdir(DOCS_FOLDER) if f.endswith((".pdf", ".txt"))]
-    for file in files:
-        file_path = os.path.join(DOCS_FOLDER, file)
-        try:
-            existing = collection.get(ids=[file])
-            if not existing or not existing["ids"]:
-                text_content = ""
-                if file.endswith(".pdf"):
-                    reader = pypdf.PdfReader(file_path)
-                    for page in reader.pages:
-                        text_content += page.extract_text() or ""
-                elif file.endswith(".txt"):
-                    with open(file_path, "r", encoding="utf-8") as f:
-                        text_content = f.read()
-                
-                if text_content.strip():
-                    collection.add(documents=[text_content], ids=[file])
-        except Exception:
-            pass
-    return files
+# Sidebar Selection
+selected_pdf = st.sidebar.selectbox("Choose a PDF document", pdf_files)
+pdf_path = os.path.join(DOC_DIR, selected_pdf)
 
-available_files = load_all_files()
+@st.cache_data
+def load_pdf_text(path):
+    loader = PyPDFLoader(path)
+    pages = loader.load()
+    text = "".join([page.page_content for page in pages])
+    return text
 
-# Session State Initialization
-if "question_count" not in st.session_state:
-    st.session_state.question_count = 0
-if "ai_question" not in st.session_state:
-    st.session_state.ai_question = ""
-if "context_used" not in st.session_state:
-    st.session_state.context_used = ""
-if "evaluation_result" not in st.session_state:
-    st.session_state.evaluation_result = ""
-if "detailed_explanation" not in st.session_state:
-    st.session_state.detailed_explanation = ""
+with st.spinner("Extracting text from PDF..."):
+    pdf_text = load_pdf_text(pdf_path)
 
-# 3. Dynamic File Selection
-if not available_files:
-    st.warning(f"⚠️ `{DOCS_FOLDER}` கோப்புறை காலியாக உள்ளது! GitHub ரிபாசிட்டரியில் `my_documents` என்ற ஃபோல்டரை உருவாக்கி அதற்குள் உங்கள் PDF அல்லது TXT கோப்புகளைச் சேர்த்துள்ளீர்களா என உறுதி செய்யவும்.")
-    selected_file = "Sample"
-else:
-    selected_file = st.selectbox(
-        "பயிற்சிக்கான ஆவணம் / தலைப்பைத் தேர்ந்தெடுக்கவும்:",
-        available_files
-    )
+# Initialize Session State for Quiz Generation
+if "quiz_data" not in st.session_state or st.session_state.get("current_pdf") != selected_pdf:
+    st.session_state.current_pdf = selected_pdf
+    st.session_state.quiz_data = None
+    st.session_state.submitted = False
 
-# Function to generate General question in Tamil
-def generate_new_question():
-    try:
-        sample_text = "பொதுவான அறிவு மற்றும் ஆவணத் தகவல்."
-        if available_files:
-            file_data = collection.get(ids=[selected_file])
-            if file_data and file_data["documents"]:
-                full_text = file_data["documents"][0]
-                start_idx = random.randint(0, max(0, len(full_text) - 4000))
-                sample_text = full_text[start_idx:start_idx + 4000]
-        
+if st.button("Generate New Quiz"):
+    with st.spinner("Generating quiz questions using Gemini..."):
         prompt = f"""
-        You are an expert quiz creator. Read the following text extracted strictly from the document and create ONE high-quality multiple-choice question (MCQ) in TAMIL language.
-        
-        CRITICAL INSTRUCTIONS:
-        1. The question, options, and explanation MUST be completely in TAMIL (தமிழ்). Avoid using any LaTeX symbols or dollar signs ($).
-        2. Put each option (a, b, c, d) on a completely new line. 
-        3. Use this exact output structure:
-        
-        Question: [Type the question here in Tamil]
-        
-        a. [Option A text in Tamil]
-        b. [Option B text in Tamil]
-        c. [Option C text in Tamil]
-        d. [Option D text in Tamil]
-        
-        Text Content:
-        {sample_text}
+        Based on the following document text, generate 1 challenging multiple-choice question.
+        Provide 4 options labeled A, B, C, and D.
+        Specify the correct answer explicitly.
+        Provide a detailed explanation for why the answer is correct.
+
+        Format your output strictly in the following layout:
+        QUESTION: [Your Question]
+        A) [Option A]
+        B) [Option B]
+        C) [Option C]
+        D) [Option D]
+        CORRECT: [A/B/C/D]
+        EXPLANATION: [Detailed explanation]
+
+        Document text excerpt:
+        {pdf_text[:4000]}
         """
         
-        model = genai.GenerativeModel("gemini-1.5-flash")
-        response = model.generate_content(prompt)
+        # Call Gemini model
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt,
+        )
+        st.session_state.quiz_data = response.text
+        st.session_state.submitted = False
+
+# Parse and display quiz if available
+if st.session_state.quiz_data:
+    raw_text = st.session_state.quiz_data
+    
+    try:
+        opt_a, opt_b, opt_c, opt_d = "", "", "", ""
+        correct_ans = "A"
+        explanation_lines = []
+        question_lines = []
         
-        st.session_state.ai_question = response.text
-        st.session_state.context_used = sample_text
-        st.session_state.question_count += 1
-        st.session_state.evaluation_result = ""
-        st.session_state.detailed_explanation = ""
+        exp_collecting = False
+        
+        for line in raw_text.split("\n"):
+            if line.startswith("QUESTION:"):
+                question_lines.append(line.replace("QUESTION:", "").strip())
+            elif line.startswith("A)"):
+                opt_a = line.replace("A)", "").strip()
+            elif line.startswith("B)"):
+                opt_b = line.replace("B)", "").strip()
+            elif line.startswith("C)"):
+                opt_c = line.replace("C)", "").strip()
+            elif line.startswith("D)"):
+                opt_d = line.replace("D)", "").strip()
+            elif line.startswith("CORRECT:"):
+                correct_ans = line.replace("CORRECT:", "").strip()[0].upper()
+            elif line.startswith("EXPLANATION:"):
+                exp_collecting = True
+                explanation_lines.append(line.replace("EXPLANATION:", "").strip())
+            elif exp_collecting:
+                explanation_lines.append(line.strip())
+
+        question_text = " ".join(question_lines) if question_lines else "Question text parsing error."
+        full_explanation = " ".join(explanation_lines)
+
+        st.markdown("### 🧠 Pop Quiz")
+        st.write(f"**{question_text}**")
+
+        options = {
+            "A": opt_a,
+            "B": opt_b,
+            "C": opt_c,
+            "D": opt_d
+        }
+
+        user_choice = st.radio(
+            "Select your option:",
+            options=list(options.keys()),
+            format_func=lambda x: f"{x}) {options[x]}"
+        )
+
+        if st.button("Submit Answer"):
+            st.session_state.submitted = True
+
+        if st.session_state.submitted:
+            if user_choice == correct_ans:
+                st.success("🎉 Good job! Your answer is correct.")
+            else:
+                st.error(f"❌ Wrong answer. The correct option was **{correct_ans}**.")
+            
+            st.info(f"**Explanation:** {full_explanation}")
+
     except Exception as e:
-        st.error(f"Error generating question: {e}")
-
-# Start Quiz Button (Always visible)
-st.markdown("---")
-if st.button("🚀 வினாடி வினாவைத் தொடங்குக / அடுத்த கேள்வி"):
-    generate_new_question()
-
-# 4. Display Question and Options if available
-if st.session_state.ai_question:
-    st.markdown(f"### 📊 வினா எண்: {st.session_state.question_count}")
-    st.markdown(st.session_state.ai_question)
-    
-    user_choice = st.radio(
-        "உங்கள் விடை விருப்பத்தைத் தேர்ந்தெடுக்கவும்:",
-        ("a", "b", "c", "d"),
-        key=f"q_{st.session_state.question_count}"
-    )
-    
-    if st.button("சமர்ப்பித்து மதிப்பிடுக ➡️"):
-        with st.spinner("AI உங்கள் பதிலைச் சரிபார்க்கிறது..."):
-            try:
-                eval_prompt = f"""
-                Full Question and Options:
-                {st.session_state.ai_question}
-                
-                Reference context: {st.session_state.context_used}
-                User selected option: '{user_choice}'
-                
-                Task (Completely in TAMIL / தமிழ்):
-                - Check if the user's selected option is correct based on the reference context and options.
-                - If correct, start with "✅ **நன்று! (சரியான பதில்)**" and appreciate the user in Tamil.
-                - If incorrect, start with "❌ **தவறு! (தவறான பதில்)**", state what the correct option/answer is, and provide a short explanation in Tamil.
-                """
-                
-                model = genai.GenerativeModel("gemini-1.5-flash")
-                eval_response = model.generate_content(eval_prompt)
-                
-                st.session_state.evaluation_result = eval_response.text
-            except Exception as e:
-                st.error(f"Error evaluating: {e}")
-
-    # Display Evaluation Result
-    if st.session_state.evaluation_result:
-        st.markdown("---")
-        st.subheader("📢 AI மதிப்பீடு:")
-        st.markdown(st.session_state.evaluation_result)
+        st.error(f"Error parsing quiz format. Click generate again. Details: {e}")
