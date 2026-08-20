@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import os
-import random
 import pypdf
 from groq import Groq
 import streamlit as st
@@ -9,7 +8,7 @@ import chromadb
 st.set_page_config(page_title="AI Document Quiz Master", layout="centered")
 
 st.title("🎯 AI Document Quiz Master (தமிழ்)")
-st.write("உங்கள் ஆவணங்களிலிருந்து எப்பேர்ப்பட்ட பொதுவான வினாக்களையும் (MCQs) தமிழில் உருவாக்கிக் பயிற்சி செய்யுங்கள்!")
+st.write("உங்கள் ஆவணத்திலிருந்து முழுமையான PDF-ஐ உள்ளடக்கும் வகையில் வரம்பற்ற கேள்விகளுடன் பயிற்சி செய்யுங்கள்!")
 
 # 1. Folder & Database Setup
 DOCS_FOLDER = "./my_documents"
@@ -57,7 +56,7 @@ def load_all_files():
 
 available_files = load_all_files()
 
-# Session State Initialization
+# Session State Initialization for Unlimited Progress Tracking
 if "question_count" not in st.session_state:
     st.session_state.question_count = 0
 if "ai_question" not in st.session_state:
@@ -66,6 +65,10 @@ if "context_used" not in st.session_state:
     st.session_state.context_used = ""
 if "evaluation_result" not in st.session_state:
     st.session_state.evaluation_result = ""
+if "text_pointer" not in st.session_state:
+    st.session_state.text_pointer = 0
+if "current_file" not in st.session_state:
+    st.session_state.current_file = ""
 
 # 3. Dynamic File Selection
 if not available_files:
@@ -77,19 +80,40 @@ else:
         available_files
     )
 
-# Function to generate question in Tamil using Groq with spelling corrections
-def generate_new_question():
+# Reset pointer if user changes the file
+if st.session_state.current_file != selected_file:
+    st.session_state.current_file = selected_file
+    st.session_state.text_pointer = 0
+    st.session_state.question_count = 0
+    st.session_state.ai_question = ""
+    st.session_state.evaluation_result = ""
+
+# Function to generate sequential next question covering full PDF
+def generate_next_question():
     try:
         sample_text = "பொதுவான அறிவு மற்றும் ஆவணத் தகவல்."
         if available_files:
             file_data = collection.get(ids=[selected_file])
             if file_data and file_data["documents"]:
                 full_text = file_data["documents"][0]
-                start_idx = random.randint(0, max(0, len(full_text) - 4000))
-                sample_text = full_text[start_idx:start_idx + 4000]
+                total_len = len(full_text)
+                
+                # Check if we reached the end of the document
+                if st.session_state.text_pointer >= total_len:
+                    st.success("🎉 வாழ்த்துகள்! இந்த ஆவணத்தின் (PDF) அனைத்துப் பகுதிகளிலிருந்தும் கேள்விகள் கேட்கப்பட்டுவிட்டன.")
+                    st.session_state.text_pointer = 0  # Loop back to start if desired
+                
+                chunk_size = 3500
+                start_idx = st.session_state.text_pointer
+                end_idx = min(start_idx + chunk_size, total_len)
+                
+                sample_text = full_text[start_idx:end_idx]
+                
+                # Move pointer forward for the next click
+                st.session_state.text_pointer = end_idx
         
         prompt = f"""
-        You are an expert Tamil quiz creator. Read the following text and create ONE high-quality multiple-choice question (MCQ) strictly in pure, grammatically correct TAMIL (தமிழ்) language with zero spelling mistakes.
+        You are an expert Tamil quiz creator. Read the following progressive text block from the document and create ONE high-quality multiple-choice question (MCQ) strictly in pure, grammatically correct TAMIL (தமிழ்) language with zero spelling mistakes.
         
         CRITICAL INSTRUCTIONS:
         1. Ensure correct spelling and clear formatting in Tamil words (e.g., பொருளாதாரம், செலவினங்கள்). Do not make typo errors.
@@ -103,7 +127,7 @@ def generate_new_question():
         c. [Option C text in Tamil]
         d. [Option D text in Tamil]
         
-        Text Content:
+        Text Content Excerpt:
         {sample_text}
         """
         
@@ -120,10 +144,11 @@ def generate_new_question():
     except Exception as e:
         st.error(f"Error generating question: {e}")
 
-# Start Quiz Button
+# Start or Next Question Button
 st.markdown("---")
-if st.button("🚀 வினாடி வினாவைத் தொடங்குக / அடுத்த கேள்வி"):
-    generate_new_question()
+button_label = "🚀 வினாடி வினாவைத் தொடங்குக" if st.session_state.question_count == 0 else "⏭️ அடுத்த கேள்விக்குச் செல்க (Next Question)"
+if st.button(button_label):
+    generate_next_question()
 
 # 4. Display Question and Options
 if st.session_state.ai_question:
