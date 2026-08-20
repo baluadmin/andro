@@ -7,7 +7,7 @@ import chromadb
 
 st.set_page_config(page_title="AI Document Quiz Master", layout="centered")
 
-# --- HIDE ALL STREAMLIT BRANDING, TOOLBARS & BADGES ---
+# --- HIDE STREAMLIT HEADER, FOOTER & TOOLBARS ---
 hide_streamlit_style = """
 <style>
 #MainMenu {visibility: hidden;}
