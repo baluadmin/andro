@@ -169,10 +169,11 @@ if st.session_state.ai_question:
                 User selected option: '{user_choice}'
                 
                 Task (Completely in correct TAMIL / தமிழ் with no spelling errors):
-                1. Check if the user's selected option is correct based on the Reference context.
-                2. If correct, start with "✅ **நன்று! (சரியான பதில்)**".
-                3. If incorrect, start with "❌ **தவறு! (தவறான பதில்)**".
-                4. You MUST provide a clear section titled "**சரியான விளக்கம்:**" that explains explicitly how and why the correct answer is right by referencing the source context text.
+                - Check if the selected option '{user_choice}' is correct based on the text.
+                - If correct, start with "✅ **நன்று! (சரியான பதில்)**".
+                - If incorrect, start with "❌ **தவறு! (தவறான பதில்)**".
+                - Provide a section "**சரியான விளக்கம்:**" that gives ONLY the direct fact or logic from the text. 
+                - EXCLUDE meta phrases like "கொடுக்கப்பட்ட PDF-இல்" or "என குறிப்பிடப்பட்டுள்ளது". Just state the factual reason clearly and simply.
                 """
                 
                 eval_completion = client.chat.completions.create(
