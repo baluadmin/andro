@@ -7,17 +7,21 @@ import chromadb
 
 st.set_page_config(page_title="AI Document Quiz Master", layout="centered")
 
-# --- HIDE STREAMLIT TOP RIGHT HEADER & FOOTER CSS ---
+# --- HIDE ALL STREAMLIT BRANDING, HEADER, FOOTER & VIEWER BADGES ---
 hide_streamlit_style = """
 <style>
 #MainMenu {visibility: hidden;}
 header {visibility: hidden;}
 footer {visibility: hidden;}
 .stAppToolbar {visibility: hidden;}
+.stAppDeployButton {display: none;}
+div[data-testid="stStatusWidget"] {visibility: hidden;}
+.viewerBadge_container__1QSob {display: none;}
+.styles_viewerBadge__1yB5_ {display: none;}
 </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
-# -----------------------------------------------------
+# -------------------------------------------------------------------
 
 st.title("🎯 AI Document Quiz Master (தமிழ்)")
 st.write("உங்கள் ஆவணத்திலிருந்து முழுமையான PDF-ஐ உள்ளடக்கும் வகையில் வரம்பற்ற கேள்விகளுடன் பயிற்சி செய்யுங்கள்!")
