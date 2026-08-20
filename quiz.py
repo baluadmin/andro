@@ -112,9 +112,9 @@ def generate_next_question():
         prompt = f"""
         You are an expert Tamil quiz creator. Read the following progressive text block from the document and create ONE high-quality multiple-choice question (MCQ) strictly in pure, grammatically correct TAMIL (தமிழ்) language with zero spelling mistakes.
         
-        CRITICAL INSTRUCTIONS:
-        1. Ensure correct spelling and clear formatting in Tamil words (பொருளாதாரம், செலவினங்கள் போன்றவை). Do not make typo errors.
-        2. Put each option (a, b, c, d) on a completely new line. 
+        CRITICAL FORMATTING INSTRUCTIONS:
+        1. Ensure correct spelling and clear formatting in Tamil words. Do not make typo errors.
+        2. Put each option (a, b, c, d) on a completely new line (one by one).
         3. Use this exact output structure:
         
         Question: [Type the question here cleanly in Tamil]
@@ -165,13 +165,14 @@ if st.session_state.ai_question:
                 Full Question and Options:
                 {st.session_state.ai_question}
                 
-                Reference context: {st.session_state.context_used}
+                Reference context from PDF: {st.session_state.context_used}
                 User selected option: '{user_choice}'
                 
                 Task (Completely in correct TAMIL / தமிழ் with no spelling errors):
-                - Check if the user's selected option is correct based on the reference context.
-                - If correct, start with "✅ **நன்று! (சரியான பதில்)**" and provide a detailed explanation showing **how and why it is correct** based on the document text.
-                - If incorrect, start with "❌ **தவறு! (தவறான பதில்)**", clearly state **what the correct option/answer is**, and provide a detailed explanation explaining **why the correct answer is right and how it is derived from the source text**.
+                1. Check if the user's selected option is correct based on the Reference context.
+                2. If correct, start with "✅ **நன்று! (சரியான பதில்)**".
+                3. If incorrect, start with "❌ **தவறு! (தவறான பதில்)**".
+                4. You MUST provide a clear section titled "**சரியான விளக்கம்:**" that explains explicitly how and why the correct answer is right by referencing the source context text.
                 """
                 
                 eval_completion = client.chat.completions.create(
