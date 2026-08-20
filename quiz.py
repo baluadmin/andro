@@ -2,7 +2,7 @@
 import os
 import random
 import pypdf
-import google.generativeai as genai
+import google as genai
 import streamlit as st
 import chromadb
 
