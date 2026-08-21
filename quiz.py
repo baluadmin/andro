@@ -144,7 +144,7 @@ def generate_next_question():
         """
         
         completion = client.chat.completions.create(
-            model="llama-3.1-8b-instant",
+            model="openai/gpt-oss-20b",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.3
         )
@@ -192,7 +192,7 @@ if st.session_state.ai_question:
                 """
                 
                 eval_completion = client.chat.completions.create(
-                    model="llama-3.1-8b-instant",
+                    model="openai/gpt-oss-20b",
                     messages=[{"role": "user", "content": eval_prompt}],
                     temperature=0.3
                 )
