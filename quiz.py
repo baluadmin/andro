@@ -35,7 +35,8 @@ if not os.path.exists(DOCS_FOLDER):
 
 # 2. Groq & ChromaDB Setup
 try:
-    groq_api_key = "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"
+    # Use st.secrets for cloud deployment, fallback to direct string if local testing
+    groq_api_key = st.secrets.get("GROQ_API_KEY", "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")
     client = Groq(api_key=groq_api_key)
     
     chroma_client = chromadb.PersistentClient(path=db_path)
@@ -145,7 +146,7 @@ def generate_next_question():
         """
         
         completion = client.chat.completions.create(
-            model="openai/gpt-oss-20b",
+            model="llama3-70b-8192",  # Updated to a stable standard Groq model name
             messages=[{"role": "user", "content": prompt}],
             temperature=0.3
         )
@@ -193,7 +194,7 @@ if st.session_state.ai_question:
                 """
                 
                 eval_completion = client.chat.completions.create(
-                    model="openai/gpt-oss-20b",
+                    model="llama3-70b-8192",
                     messages=[{"role": "user", "content": eval_prompt}],
                     temperature=0.3
                 )
