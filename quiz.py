@@ -23,7 +23,7 @@ div[data-testid="stStatusWidget"] {display: none !important;}
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 st.title("🎯 AI Document Quiz Master (தமிழ்)")
-st.write("உங்கள் ஆவணத்திலிருந்து முழுமையான PDF-ஐ உள்ளடக்கும் வகையில் வரம்பற்ற கேள்விகளுடன் பயிற்சி செய்யுங்கள்!")
+st.write("உங்கள் PDF அல்லது உரை ஆவணத்தைப் பதிவேற்றி அல்லது இணைத்து, வரம்பற்ற கேள்விகளுடன் பயிற்சி செய்யுங்கள்!")
 
 # 1. Folder & Database Setup
 DOCS_FOLDER = "./my_documents"
@@ -40,8 +40,14 @@ try:
     chroma_client = chromadb.PersistentClient(path=db_path)
     collection = chroma_client.get_or_create_collection(name="subject_books_library")
 except Exception:
-    st.error("மன்னிக்கவும், அமைப்புப் பிழை ஏற்பட்டுள்ளது. பிறகு முயற்சிக்கவும்.")
     st.stop()
+
+# File Uploader Widget for users to upload PDFs directly from the UI
+uploaded_file = st.file_uploader("உங்கள் PDF அல்லது TXT கோப்பைப் பதிவேற்றுக:", type=["pdf", "txt"])
+if uploaded_file is not None:
+    file_path = os.path.join(DOCS_FOLDER, uploaded_file.name)
+    with open(file_path, "wb") as f:
+        f.write(uploaded_file.getbuffer())
 
 # Auto-load all files from folder into ChromaDB
 def load_all_files():
@@ -54,7 +60,7 @@ def load_all_files():
         sample_file_path = os.path.join(DOCS_FOLDER, "sample_doc.txt")
         if not os.path.exists(sample_file_path):
             with open(sample_file_path, "w", encoding="utf-8") as sf:
-                sf.write("தமிழ்நாடு (Tamil Nadu) இந்தியாவின் தெற்கே உள்ள ஒரு மாநிலமாகும். இதன் தலைநகரம் சென்னை ஆகும்.")
+                sf.write("தமிழ்நாடு இந்தியாவின் தெற்கே உள்ள ஒரு மாநிலமாகும். இதன் தலைநகரம் சென்னை ஆகும். தமிழ் மொழி உலகின் மிகத் தொன்மையான செம்மொழிகளில் ஒன்றாகும்.")
         files = [f for f in os.listdir(DOCS_FOLDER) if f.endswith((".pdf", ".txt"))]
 
     for file in files:
@@ -230,3 +236,6 @@ if st.session_state.ai_question:
         if st.button("⏭️ அடுத்த கேள்விக்குச் செல்க (Next Question)"):
             generate_next_question()
             st.rerun()
+```eof
+
+I have added an `st.file_uploader` widget directly to the app above so you can easily upload your PDF document right from the browser interface!
