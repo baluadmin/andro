@@ -39,8 +39,8 @@ try:
     
     chroma_client = chromadb.PersistentClient(path=db_path)
     collection = chroma_client.get_or_create_collection(name="subject_books_library")
-except Exception as e:
-    st.error(f"Configuration Error: {e}")
+except Exception:
+    st.error("மன்னிக்கவும், அமைப்புப் பிழை ஏற்பட்டுள்ளது. பிறகு முயற்சிக்கவும்.")
     st.stop()
 
 # Auto-load all files from folder into ChromaDB
@@ -50,12 +50,11 @@ def load_all_files():
     
     files = [f for f in os.listdir(DOCS_FOLDER) if f.endswith((".pdf", ".txt"))]
     
-    # If no files exist, create a sample text file so the app doesn't break
     if not files:
         sample_file_path = os.path.join(DOCS_FOLDER, "sample_doc.txt")
         if not os.path.exists(sample_file_path):
             with open(sample_file_path, "w", encoding="utf-8") as sf:
-                sf.write("தமிழ்நாடு (Tamil Nadu) இந்தியாவின் தெற்கே உள்ள ஒரு மாநிலமாகும். இதன் தலைநகரம் சென்னை ஆகும். தமிழ் மொழி உலகின் மிகத் தொன்மையான செம்மொழிகளில் ஒன்றாகும்.")
+                sf.write("தமிழ்நாடு (Tamil Nadu) இந்தியாவின் தெற்கே உள்ள ஒரு மாநிலமாகும். இதன் தலைநகரம் சென்னை ஆகும்.")
         files = [f for f in os.listdir(DOCS_FOLDER) if f.endswith((".pdf", ".txt"))]
 
     for file in files:
@@ -104,7 +103,6 @@ else:
         available_files
     )
 
-# Reset pointer if user changes the file
 if st.session_state.current_file != selected_file:
     st.session_state.current_file = selected_file
     st.session_state.text_pointer = 0
@@ -112,7 +110,6 @@ if st.session_state.current_file != selected_file:
     st.session_state.ai_question = ""
     st.session_state.evaluation_result = ""
 
-# Function to generate sequential next question covering full PDF
 def generate_next_question():
     try:
         sample_text = "பொதுவான அறிவு மற்றும் ஆவணத் தகவல்."
@@ -152,7 +149,6 @@ def generate_next_question():
         {sample_text}
         """
         
-        # Using a standard supported Groq model name
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[{"role": "user", "content": prompt}],
@@ -163,10 +159,9 @@ def generate_next_question():
         st.session_state.context_used = sample_text
         st.session_state.question_count += 1
         st.session_state.evaluation_result = ""
-    except Exception as e:
-        st.error(f"Error generating question: {e}")
+    except Exception:
+        st.error("கேள்வி உருவாக்குவதில் சிக்கல் ஏற்பட்டுள்ளது. மீண்டும் முயற்சிக்கவும்.")
 
-# If no question has been generated yet, show initial start button
 if st.session_state.question_count == 0:
     st.markdown("---")
     if st.button("🚀 வினாடி வினாவைத் தொடங்குக"):
@@ -174,7 +169,6 @@ if st.session_state.question_count == 0:
             generate_next_question()
         st.rerun()
 
-# 4. Display Question and Options if available
 if st.session_state.ai_question:
     st.markdown(f"### 📊 வினா எண்: {st.session_state.question_count}")
     st.markdown(st.session_state.ai_question)
@@ -210,10 +204,9 @@ if st.session_state.ai_question:
                 )
                 
                 st.session_state.evaluation_result = eval_completion.choices[0].message.content
-            except Exception as e:
-                st.error(f"Error evaluating: {e}")
+            except Exception:
+                st.error("மதிப்பீடு செய்வதில் சிக்கல் ஏற்பட்டுள்ளது.")
 
-    # Display Evaluation Result & Auto-scroll down smoothly
     if st.session_state.evaluation_result:
         st.markdown("---")
         st.subheader("📢 AI மதிப்பீடு மற்றும் தெளிவான விளக்கம்:")
