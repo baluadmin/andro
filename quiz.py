@@ -236,6 +236,3 @@ if st.session_state.ai_question:
         if st.button("⏭️ அடுத்த கேள்விக்குச் செல்க (Next Question)"):
             generate_next_question()
             st.rerun()
-```eof
-
-I have added an `st.file_uploader` widget directly to the app above so you can easily upload your PDF document right from the browser interface!
