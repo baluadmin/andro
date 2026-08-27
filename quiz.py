@@ -23,7 +23,7 @@ div[data-testid="stStatusWidget"] {display: none !important;}
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 st.title("🎯 AI Document Quiz Master (தமிழ்)")
-st.write("உங்கள் PDF அல்லது உரை ஆவணத்தைப் பதிவேற்றி அல்லது இணைத்து, வரம்பற்ற கேள்விகளுடன் பயிற்சி செய்யுங்கள்!")
+st.write("உங்கள் ஃபோல்டரில் உள்ள PDF அல்லது TXT ஆவணங்களிலிருந்து வரம்பற்ற கேள்விகளுடன் பயிற்சி செய்யுங்கள்!")
 
 # 1. Folder & Database Setup
 DOCS_FOLDER = "./my_documents"
@@ -42,14 +42,7 @@ try:
 except Exception:
     st.stop()
 
-# File Uploader Widget for users to upload PDFs directly from the UI
-uploaded_file = st.file_uploader("உங்கள் PDF அல்லது TXT கோப்பைப் பதிவேற்றுக:", type=["pdf", "txt"])
-if uploaded_file is not None:
-    file_path = os.path.join(DOCS_FOLDER, uploaded_file.name)
-    with open(file_path, "wb") as f:
-        f.write(uploaded_file.getbuffer())
-
-# Auto-load all files from folder into ChromaDB
+# Auto-load all files from the folder into ChromaDB
 def load_all_files():
     if not os.path.exists(DOCS_FOLDER):
         return []
@@ -99,9 +92,9 @@ if "text_pointer" not in st.session_state:
 if "current_file" not in st.session_state:
     st.session_state.current_file = ""
 
-# 3. Dynamic File Selection
+# 3. Dynamic Folder File Selection
 if not available_files:
-    st.warning(f"⚠️ `{DOCS_FOLDER}` கோப்புறை காலியாக உள்ளது.")
+    st.warning(f"⚠️ `{DOCS_FOLDER}` கோப்புறை காலியாக உள்ளது. தயவுசெய்து உங்கள் PDF கோப்புகளை இந்தப் பகுதிக்குள் பதிவேற்றவும்.")
     selected_file = "Sample"
 else:
     selected_file = st.selectbox(
