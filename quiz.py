@@ -34,7 +34,7 @@ if not os.path.exists(DOCS_FOLDER):
 
 # 2. Groq & ChromaDB Setup
 try:
-    groq_api_key = "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"
+    groq_api_key = "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"
     client = Groq(api_key=groq_api_key)
     
     chroma_client = chromadb.PersistentClient(path=db_path)
@@ -55,7 +55,7 @@ def load_all_files():
         sample_file_path = os.path.join(DOCS_FOLDER, "sample_doc.txt")
         if not os.path.exists(sample_file_path):
             with open(sample_file_path, "w", encoding="utf-8") as sf:
-                sf.write("தமிழ்நாடு (Tamil Nadu) இந்தியாவின் தெற்கੇ உள்ள ஒரு மாநிலமாகும். இதன் தலைநகரம் சென்னை ஆகும். தமிழ் மொழி உலகின் மிகத் தொன்மையான செம்மொழிகளில் ஒன்றாகும்.")
+                sf.write("தமிழ்நாடு (Tamil Nadu) இந்தியாவின் தெற்கே உள்ள ஒரு மாநிலமாகும். இதன் தலைநகரம் சென்னை ஆகும். தமிழ் மொழி உலகின் மிகத் தொன்மையான செம்மொழிகளில் ஒன்றாகும்.")
         files = [f for f in os.listdir(DOCS_FOLDER) if f.endswith((".pdf", ".txt"))]
 
     for file in files:
