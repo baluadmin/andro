@@ -34,7 +34,7 @@ if not os.path.exists(DOCS_FOLDER):
 
 # 2. Groq & ChromaDB Setup
 try:
-    groq_api_key = "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"
+    groq_api_key = "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"
     client = Groq(api_key=groq_api_key)
     
     chroma_client = chromadb.PersistentClient(path=db_path)
