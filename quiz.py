@@ -32,15 +32,35 @@ db_path = "./chroma_docs_db"
 if not os.path.exists(DOCS_FOLDER):
     os.makedirs(DOCS_FOLDER)
 
+# Session State Initialization (including persistent error message state)
+if "ai_question" not in st.session_state:
+    st.session_state.ai_question = ""
+if "context_used" not in st.session_state:
+    st.session_state.context_used = ""
+if "evaluation_result" not in st.session_state:
+    st.session_state.evaluation_result = ""
+if "text_pointer" not in st.session_state:
+    st.session_state.text_pointer = 0
+if "current_file" not in st.session_state:
+    st.session_state.current_file = ""
+if "question_count" not in st.session_state:
+    st.session_state.question_count = 0
+if "persistent_error" not in st.session_state:
+    st.session_state.persistent_error = ""
+
 # 2. Groq & ChromaDB Setup
 try:
-    groq_api_key = "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"
+    groq_api_key = "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"
     client = Groq(api_key=groq_api_key)
     
     chroma_client = chromadb.PersistentClient(path=db_path)
     collection = chroma_client.get_or_create_collection(name="subject_books_library")
 except Exception as e:
-    st.error(f"Setup Error: {e}")
+    st.session_state.persistent_error = f"Setup Error: {e}"
+
+# Display persistent errors cleanly so they don't disappear
+if st.session_state.persistent_error:
+    st.error(st.session_state.persistent_error)
     st.stop()
 
 # Auto-load files from folder
@@ -77,20 +97,6 @@ def load_all_files():
 
 available_files = load_all_files()
 
-# Session State Initialization
-if "ai_question" not in st.session_state:
-    st.session_state.ai_question = ""
-if "context_used" not in st.session_state:
-    st.session_state.context_used = ""
-if "evaluation_result" not in st.session_state:
-    st.session_state.evaluation_result = ""
-if "text_pointer" not in st.session_state:
-    st.session_state.text_pointer = 0
-if "current_file" not in st.session_state:
-    st.session_state.current_file = ""
-if "question_count" not in st.session_state:
-    st.session_state.question_count = 0
-
 # File Selection Dropdown
 selected_file = st.selectbox("பயிற்சிக்கான ஆவணத்தைத் தேர்ந்தெடுக்கவும்:", available_files)
 
@@ -101,6 +107,7 @@ if st.session_state.current_file != selected_file:
     st.session_state.question_count = 0
     st.session_state.ai_question = ""
     st.session_state.evaluation_result = ""
+    st.session_state.persistent_error = ""
 
 def generate_question():
     try:
@@ -140,14 +147,19 @@ def generate_question():
         st.session_state.context_used = sample_text
         st.session_state.question_count += 1
         st.session_state.evaluation_result = ""
+        st.session_state.persistent_error = ""
     except Exception as e:
-        st.error(f"பிழை: {e}")
+        st.session_state.persistent_error = f"கேள்வி உருவாக்குவதில் பிழை: {e}"
 
 # Generate first question automatically if none exists yet
 if not st.session_state.ai_question:
     if st.button("🚀 கேள்விகளைத் தொடங்குக"):
         generate_question()
         st.rerun()
+
+# Display Persistent Errors if any
+if st.session_state.persistent_error:
+    st.error(st.session_state.persistent_error)
 
 # Display Question
 if st.session_state.ai_question:
@@ -173,8 +185,9 @@ if st.session_state.ai_question:
                     temperature=0.3
                 )
             st.session_state.evaluation_result = eval_comp.choices[0].message.content
+            st.session_state.persistent_error = ""
         except Exception as e:
-            st.error(f"மதிப்பீட்டுப் பிழை: {e}")
+            st.session_state.persistent_error = f"மதிப்பீட்டுப் பிழை: {e}"
 
     if st.session_state.evaluation_result:
         st.markdown("---")
