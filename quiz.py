@@ -49,6 +49,15 @@ def load_all_files():
         return []
     
     files = [f for f in os.listdir(DOCS_FOLDER) if f.endswith((".pdf", ".txt"))]
+    
+    # If no files exist, create a sample text file so the app doesn't break
+    if not files:
+        sample_file_path = os.path.join(DOCS_FOLDER, "sample_doc.txt")
+        if not os.path.exists(sample_file_path):
+            with open(sample_file_path, "w", encoding="utf-8") as sf:
+                sf.write("தமிழ்நாடு (Tamil Nadu) இந்தியாவின் தெற்கੇ உள்ள ஒரு மாநிலமாகும். இதன் தலைநகரம் சென்னை ஆகும். தமிழ் மொழி உலகின் மிகத் தொன்மையான செம்மொழிகளில் ஒன்றாகும்.")
+        files = [f for f in os.listdir(DOCS_FOLDER) if f.endswith((".pdf", ".txt"))]
+
     for file in files:
         file_path = os.path.join(DOCS_FOLDER, file)
         try:
@@ -87,7 +96,7 @@ if "current_file" not in st.session_state:
 
 # 3. Dynamic File Selection
 if not available_files:
-    st.warning(f"⚠️ `{DOCS_FOLDER}` கோப்புறை காலியாக உள்ளது! GitHub ரிபாசிட்டரியில் `my_documents` என்ற ஃபோல்டரை உருவாக்கி அதற்குள் உங்கள் PDF அல்லது TXT கோப்புகளைச் சேர்த்துள்ளீர்களா என உறுதி செய்யவும்.")
+    st.warning(f"⚠️ `{DOCS_FOLDER}` கோப்புறை காலியாக உள்ளது மற்றும் மாதிரியை உருவாக்க முடியவில்லை.")
     selected_file = "Sample"
 else:
     selected_file = st.selectbox(
@@ -114,7 +123,7 @@ def generate_next_question():
                 total_len = len(full_text)
                 
                 if st.session_state.text_pointer >= total_len:
-                    st.success("🎉 வாழ்த்துகள்! இந்த ஆவணத்தின் (PDF) அனைத்துப் பகுதிகளிலிருந்தும் கேள்விகள் கேட்கப்பட்டுவிட்டன.")
+                    st.success("🎉 வாழ்த்துகள்! இந்த ஆவணத்தின் அனைத்துப் பகுதிகளிலிருந்தும் கேள்விகள் கேட்கப்பட்டுவிட்டன.")
                     st.session_state.text_pointer = 0
                 
                 chunk_size = 3500
@@ -161,6 +170,7 @@ if st.session_state.question_count == 0:
     st.markdown("---")
     if st.button("🚀 வினாடி வினாவைத் தொடங்குக"):
         generate_next_question()
+        st.rerun()
 
 # 4. Display Question and Options if available
 if st.session_state.ai_question:
