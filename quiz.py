@@ -96,7 +96,7 @@ if "current_file" not in st.session_state:
 
 # 3. Dynamic File Selection
 if not available_files:
-    st.warning(f"⚠️ `{DOCS_FOLDER}` கோப்புறை காலியாக உள்ளது மற்றும் மாதிரியை உருவாக்க முடியவில்லை.")
+    st.warning(f"⚠️ `{DOCS_FOLDER}` கோப்புறை காலியாக உள்ளது.")
     selected_file = "Sample"
 else:
     selected_file = st.selectbox(
@@ -152,8 +152,9 @@ def generate_next_question():
         {sample_text}
         """
         
+        # Using a standard supported Groq model name
         completion = client.chat.completions.create(
-            model="openai/gpt-oss-20b",
+            model="llama-3.3-70b-versatile",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.3
         )
@@ -169,7 +170,8 @@ def generate_next_question():
 if st.session_state.question_count == 0:
     st.markdown("---")
     if st.button("🚀 வினாடி வினாவைத் தொடங்குக"):
-        generate_next_question()
+        with st.spinner("கேள்வி உருவாக்கப்படுகிறது..."):
+            generate_next_question()
         st.rerun()
 
 # 4. Display Question and Options if available
@@ -202,7 +204,7 @@ if st.session_state.ai_question:
                 """
                 
                 eval_completion = client.chat.completions.create(
-                    model="openai/gpt-oss-20b",
+                    model="llama-3.3-70b-versatile",
                     messages=[{"role": "user", "content": eval_prompt}],
                     temperature=0.3
                 )
