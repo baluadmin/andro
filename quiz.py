@@ -32,7 +32,7 @@ db_path = "./chroma_docs_db"
 if not os.path.exists(DOCS_FOLDER):
     os.makedirs(DOCS_FOLDER)
 
-# Session State Initialization (including persistent error message state)
+# Session State Initialization
 if "ai_question" not in st.session_state:
     st.session_state.ai_question = ""
 if "context_used" not in st.session_state:
@@ -48,17 +48,16 @@ if "question_count" not in st.session_state:
 if "persistent_error" not in st.session_state:
     st.session_state.persistent_error = ""
 
-# 2. Groq & ChromaDB Setup
+# 2. Groq & ChromaDB Setup (Using Streamlit Secrets safely)
 try:
-    groq_api_key = "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"
+    groq_api_key = st.secrets["GROQ_API_KEY"]
     client = Groq(api_key=groq_api_key)
     
     chroma_client = chromadb.PersistentClient(path=db_path)
     collection = chroma_client.get_or_create_collection(name="subject_books_library")
 except Exception as e:
-    st.session_state.persistent_error = f"Setup Error: {e}"
+    st.session_state.persistent_error = f"அமைப்புப் பிழை (Setup Error): உங்கள் .streamlit/secrets.toml ஃபைலில் 'GROQ_API_KEY' சரியாக உள்ளதா எனச் சரிபார்க்கவும்."
 
-# Display persistent errors cleanly so they don't disappear
 if st.session_state.persistent_error:
     st.error(st.session_state.persistent_error)
     st.stop()
